@@ -12,7 +12,7 @@ public class CartItemDTO {
 
     @Id
     private String cartItemId;
-    private String productId;
+    private String variantId;
     private Long cartItemQuantity;
     private String cartItemCreatedAt;
     private String cartItemModifiedAt;

@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 @Table(name = "cart",schema = "shoppingcart")
 public class CartDAO {
 

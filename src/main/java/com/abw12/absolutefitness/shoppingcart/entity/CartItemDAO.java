@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 @Table(name = "cartitem" ,schema = "shoppingcart")
 public class CartItemDAO  {
     @Id
@@ -18,8 +19,8 @@ public class CartItemDAO  {
     private String cartItemId;
     @Column(name = "cart_id")
     private String cartId;
-    @Column(name = "product_id")
-    private String productId;
+    @Column(name = "variant_id")
+    private String variantId;
     @Column(name = "cart_item_quantity")
     private Long cartItemQuantity;
     @Column(name="cart_item_created_at")

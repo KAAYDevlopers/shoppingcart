@@ -2,6 +2,7 @@ package com.abw12.absolutefitness.shoppingcart.controller;
 
 import com.abw12.absolutefitness.shoppingcart.dto.CartDTO;
 import com.abw12.absolutefitness.shoppingcart.service.ShoppingCartService;
+import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ public class ShoppingCartController {
     @Autowired
     private ShoppingCartService cartService;
     @PostMapping("/addToCart")
-    private ResponseEntity<?> addToCart(@RequestBody CartDTO requestDTO){
+    private ResponseEntity<?> addToCart(@RequestBody @Valid CartDTO requestDTO){
         logger.info("Inside addToCart rest call: {} " , requestDTO);
         try{
             return new ResponseEntity<>(cartService.addToCart(requestDTO), HttpStatus.OK);

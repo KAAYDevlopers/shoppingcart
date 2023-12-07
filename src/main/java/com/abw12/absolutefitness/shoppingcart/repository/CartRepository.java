@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface CartRepository extends JpaRepository<CartDAO,String> {
 
-    @Query("SELECT c FROM CartDAO c WHERE c.userId =: userId")
+    @Query("SELECT c FROM CartDAO c WHERE c.userId =:userId")
     Optional<CartDAO> getCartDetails(String userId);
 }
