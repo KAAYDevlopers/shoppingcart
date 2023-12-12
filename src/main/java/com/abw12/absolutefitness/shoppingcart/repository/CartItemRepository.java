@@ -13,4 +13,7 @@ public interface CartItemRepository extends JpaRepository<CartItemDAO,String> {
 
     @Query("SELECT i FROM CartItemDAO i WHERE i.cartId =:cartId")
     Optional<List<CartItemDAO>> getCartItemDetails(String cartId);
+
+    @Query("DELETE FROM CartItemDAO i WHERE i.cartId =:cartId")
+    Optional<Long> deleteCartItemByCartId(String cartId);
 }

@@ -17,6 +17,7 @@ public class CartDAO {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "cart_id")
+    @OneToMany()
     private String cartId;
     @Column(name = "user_id")
     private String userId;

@@ -40,4 +40,29 @@ public class ShoppingCartController {
             return new ResponseEntity<>("Exception while fetching cart data by userId ",HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @DeleteMapping("/clearCartData/{cartId}")
+    public ResponseEntity<?> clearCart(@PathVariable String cartId){
+        logger.info("Inside clearCart method by cartId rest call: {} " , cartId);
+        try{
+            if(StringUtils.isEmpty(cartId)) throw new RuntimeException("cartId cannot be null/empty...");
+            return new ResponseEntity<>(cartService.clearCartData(cartId),HttpStatus.OK);
+        }catch (Exception e){
+            logger.error("Exception while deleting cart data  by cartId : {} => {}",cartId,e.getMessage());
+            return new ResponseEntity<>("Exception while deleting cart data by cartId ",HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/removeCartItem/{cartItemId}")
+    public ResponseEntity<?> removeCartItem(@PathVariable String cartItemId){
+        logger.info("Inside removeCartItem method by cartItemId rest call: {} " , cartItemId);
+        try{
+            if(StringUtils.isEmpty(cartItemId)) throw new RuntimeException("cartItemId cannot be null/empty...");
+            return new ResponseEntity<>(cartService.removeCartItem(cartItemId),HttpStatus.OK);
+        }catch (Exception e){
+            logger.error("Exception while deleting cartItem by cartItemId : {} => {}",cartItemId,e.getMessage());
+            return new ResponseEntity<>("Exception while deleting cartItem  by cartItemId ",HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

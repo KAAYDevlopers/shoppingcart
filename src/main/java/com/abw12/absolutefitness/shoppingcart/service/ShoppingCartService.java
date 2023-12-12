@@ -69,4 +69,27 @@ public class ShoppingCartService {
         logger.debug("Fetched cart details by userId :: {} => {}",userId,response);
         return response;
     }
+
+    @Transactional
+    public String clearCartData(String cartId){
+        logger.info("Starting to clear the cart data with cartId.. :: {}",cartId);
+        logger.debug("Removing all the cartItem with cartId :: {}",cartId);
+        Long rowsDeleted = cartItemRepository.deleteCartItemByCartId(cartId).orElseThrow(() ->
+                new RuntimeException(String.format("Error while deleting the cart item with carId :: %s", cartId)));
+        logger.debug("Total {} number of cartItem deleted with cartId = {} ",rowsDeleted,cartId);
+        if(rowsDeleted != 0){
+            cartRepository.deleteById(cartId);
+            logger.info("Deleted the cart data with cartId :: {}",cartId);
+        }else {
+            logger.info("Cart with cartId :: {} does not had any cartItem to delete",cartId);
+        }
+        return String.format("Successfully deleted the cart data with cartId %s",cartId);
+    }
+
+    public String removeCartItem(String cartItemId){
+        logger.info("Removing the cartItem  with cartItemId :: {}",cartItemId);
+        cartItemRepository.deleteById(cartItemId);
+        logger.info("Removed the cartItem with cartItemId {}",cartItemId);
+        return String.format("Successfully removed the cartItem with cartItemId :: %s",cartItemId);
+    }
 }
