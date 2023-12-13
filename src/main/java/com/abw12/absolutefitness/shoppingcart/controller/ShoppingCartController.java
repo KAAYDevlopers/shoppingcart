@@ -36,7 +36,7 @@ public class ShoppingCartController {
             if(StringUtils.isEmpty(userId)) throw new RuntimeException("userId cannot be null/empty...");
             return new ResponseEntity<>(cartService.getCartDetailsByUserId(userId),HttpStatus.OK);
         }catch (Exception e){
-            logger.error("Exception while fetching cart data  by userId : {} => {}",userId,e.getMessage());
+            logger.error("Exception while fetching cart data  by userId : {} => {}",userId,e.getMessage(),e.getCause());
             return new ResponseEntity<>("Exception while fetching cart data by userId ",HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

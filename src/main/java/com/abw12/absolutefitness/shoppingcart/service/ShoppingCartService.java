@@ -66,15 +66,15 @@ public class ShoppingCartService {
         CartDTO response = cartMapper.entityToDto(cartData);
         List<CartItemDTO> itemList = cartItemsList.stream().map(item -> cartItemMapper.entityToDto(item)).toList();
         response.setCartItem(itemList);
-        logger.debug("Fetched cart details by userId :: {} => {}",userId,response);
+        logger.info("Fetched cart details by userId :: {} => {}",userId,response);
         return response;
     }
 
     @Transactional
     public String clearCartData(String cartId){
         logger.info("Starting to clear the cart data with cartId.. :: {}",cartId);
-        logger.debug("Removing all the cartItem with cartId :: {}",cartId);
-        Long rowsDeleted = cartItemRepository.deleteCartItemByCartId(cartId).orElseThrow(() ->
+        logger.info("Removing all the cartItem with cartId :: {}",cartId);
+        Integer rowsDeleted = cartItemRepository.deleteCartItemByCartId(cartId).orElseThrow(() ->
                 new RuntimeException(String.format("Error while deleting the cart item with carId :: %s", cartId)));
         logger.debug("Total {} number of cartItem deleted with cartId = {} ",rowsDeleted,cartId);
         if(rowsDeleted != 0){
