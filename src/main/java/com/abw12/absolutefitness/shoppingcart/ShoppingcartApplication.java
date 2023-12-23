@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
@@ -13,6 +14,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 		description = "Maintain the logged-in users shopping cart , calculate cart total and retrieve the user details for checkout purpose",
 		version = "3.0"))
 @EnableTransactionManagement
+@EnableFeignClients(basePackages = "com.abw12.absolutefitness.shoppingcart.gateway.interfaces")
 public class ShoppingcartApplication {
 
 	public static void main(String[] args) {

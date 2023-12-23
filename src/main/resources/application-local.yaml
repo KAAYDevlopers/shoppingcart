@@ -1,3 +1,5 @@
+server:
+  port: 8083
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/absolutehealth
@@ -11,8 +13,12 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-server:
-  port: 8083
+  cloud:
+    openfeign:
+      client:
+        config:
+          product-inventory-controller:
+            url: http://localhost:8090/catalog/inventory
 springdoc:
   api-docs:
     path: /v3/shoppingcart-docs
