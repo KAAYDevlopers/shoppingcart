@@ -24,7 +24,7 @@ public class ShoppingCartController {
             return new ResponseEntity<>(cartService.addToCart(requestDTO), HttpStatus.OK);
         }catch (Exception e){
             logger.error("Exception while add item into cart: {}", e.getMessage());
-            return new ResponseEntity<>("Exception while Inserting/updating variant inventory data with variantId",HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Exception while Inserting/updating items into cart",HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -4,7 +4,6 @@ import com.abw12.absolutefitness.shoppingcart.constants.CommonConstants;
 import com.abw12.absolutefitness.shoppingcart.dto.CartDTO;
 import com.abw12.absolutefitness.shoppingcart.dto.CartItemDTO;
 import com.abw12.absolutefitness.shoppingcart.dto.request.AddToCartReq;
-import com.abw12.absolutefitness.shoppingcart.dto.request.InventoryValidationReq;
 import com.abw12.absolutefitness.shoppingcart.dto.response.AddToCartRes;
 import com.abw12.absolutefitness.shoppingcart.dto.response.InventoryValidationRes;
 import com.abw12.absolutefitness.shoppingcart.entity.CartDAO;
@@ -27,7 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class ShoppingCartService {
@@ -55,14 +54,17 @@ public class ShoppingCartService {
     public AddToCartRes addToCart(AddToCartReq requestDTO) {
         //todo decide on how to hanlde userId for guest and logged-in users
         logger.info("Inside addToCart method :: inserting cart data");
-        if(requestDTO == null) throw new RuntimeException("invalid data provided");
+        if(requestDTO == null) throw new RuntimeException("Invalid data provided");
         AddToCartRes response = new AddToCartRes();
         //check if variant is available or not(quantity level in inventory)
         //based on that return inStock or outOfStock response
         String variantId = requestDTO.getVariantId();
         InventoryValidationRes inventoryValidationRes;
         logger.info("validate inventory for variant with variantId:: {}",variantId);
-        ResponseEntity<Map<String, Objects>> validationRes = inventoryClient.cartValidation(new InventoryValidationReq(variantId, requestDTO.getRequestQuantity()));
+        Map<String, String> reqParam = Map.of("variantId", variantId,
+                "quantityRequested", String.valueOf(requestDTO.getRequestQuantity()));
+        ResponseEntity<Map<String, Object>> validationRes = inventoryClient.cartValidation(reqParam);
+
         if(validationRes.getStatusCode().is2xxSuccessful() && validationRes.hasBody()){
             inventoryValidationRes = objectMapper.convertValue(validationRes.getBody(), InventoryValidationRes.class);
             logger.info("response from validate product variant inventory call with variantId {} =>  {}",variantId,inventoryValidationRes);
@@ -70,38 +72,70 @@ public class ShoppingCartService {
                 logger.error("Product Variant with variantId {} is {}, cannot add to cart",variantId,CommonConstants.OUT_OF_STOCK);
                 AddToCartRes errorRes = new AddToCartRes();
                 errorRes.setStatus(HttpStatus.BAD_REQUEST.getReasonPhrase());
-                errorRes.setMessage(String.format("Product Variant with variantId %s is %s for current %s requested quantity, cannot add to cart",
+                errorRes.setMessage(String.format("Product Variant with variantId %s is %s for current %s requested quantity, cannot add it to cart",
                         variantId,CommonConstants.OUT_OF_STOCK,requestDTO.getRequestQuantity()));
                 return errorRes;
             }
         }else{
             throw new RuntimeException(String.format("Error while calling the product inventory checkStockStatus API :: %s",validationRes.getStatusCode()));
         }
-        String cartId;
+        String cartId = null;
         //check if cart already exist - if yes add the cartItem to same cart else create a new cart and add to it
         if(!StringUtils.isEmpty(requestDTO.getCartId())) {
             logger.info("Fetching the existing cart details from DB with cartId :: {}",requestDTO.getCartId());
-            CartDAO storedCartData = cartRepository.findById(requestDTO.getCartId())
+            CartDAO existingCartData = cartRepository.findById(requestDTO.getCartId()) //based on cartId present in input req
                     .orElseThrow(() -> new RuntimeException(String.format("Error while fetching the Cart with cartId :: %s",requestDTO.getCartId())));
-            cartId=storedCartData.getCartId();
-            CartItemDAO cartItemToStore = generateCartItemDataToSaveDB(storedCartData,requestDTO);
+            cartId=existingCartData.getCartId();
+            CartItemDAO cartItemToStore = generateCartItemDataToSaveDB(existingCartData,requestDTO);
             //store the cartItem into existing cart
             cartItemRepository.save(cartItemToStore);
             logger.info("New cart item data updated into existing cart with cartId :: {}",cartId);
         }
         else{
             logger.info("CartId is empty/null creating a new cart and adding cartItem data to it.");
-            //create new cart to store in db
-            CartDAO cartToSave= generateCartDataToSaveDB(requestDTO);
-            CartDAO storedCartData = cartRepository.save(cartToSave);
-            cartId=storedCartData.getCartId();
-            //create new cartItem to store in db
-            CartItemDAO cartItemToStore = generateCartItemDataToSaveDB(storedCartData,requestDTO);
-            cartItemRepository.save(cartItemToStore);
-            logger.info("Created new cart and added the cartItem into it with cartId :: {}",cartId);
+            //first check user already have any cart assign to it if no then create a new cart
+            Optional<CartDAO> existingCartData = cartRepository.getCartDetails(requestDTO.getUserId());
+            CartItemDAO cartItemToStore;
+            //for edge case if mistakenly cartId is not sent in input request
+            if(existingCartData.isPresent() && !StringUtils.isEmpty(existingCartData.get().getCartId())){
+                //add to existing cart in db
+                cartId=existingCartData.get().getCartId();
+                //check if for the requested variantId there is an existing cartId already created for this cart
+                //if yes then delete the old cartItem and create new cartItem with requested quantity
+                Optional<CartItemDAO> existingCartItem = cartItemRepository.findByVariantId(requestDTO.getVariantId());
+                if(existingCartItem.isPresent()){
+
+                    int updateRes = cartItemRepository.updateCartItem(existingCartItem.get().getCartItemId(),
+                            requestDTO.getRequestQuantity(),
+                            OffsetDateTime.now());
+                    if(updateRes !=0 ){
+                        logger.info("Successful Updated the existing cartItem for cart with cartId {}  - updated quantity={}",cartId,requestDTO.getRequestQuantity());
+                    }else{
+                        logger.error("Failed to update the existing item for cart with cartId :: {} and cartItem :: {}",cartId,existingCartItem.get().getCartItemId());
+                        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                        response.setMessage(String.format("Failed to update the existing item for cart with cartId :: %s and cartItem :: %s",cartId,existingCartItem.get().getCartItemId()));
+                        response.setCartId(cartId);
+                    }
+                } else{
+                    cartItemToStore = generateCartItemDataToSaveDB(existingCartData.get(),requestDTO);
+                    cartItemRepository.save(cartItemToStore);
+                }
+            }else{
+                // if user does not have any existing cart(first time adding a variant to cart)
+                //create new cart to store in db
+                CartDAO cartToSave= generateCartDataToSaveDB(requestDTO);
+
+                CartDAO storedCartData = cartRepository.save(cartToSave);
+                cartId=storedCartData.getCartId();
+                //create new cartItem to store in db
+                cartItemToStore = generateCartItemDataToSaveDB(storedCartData,requestDTO);
+                cartItemRepository.save(cartItemToStore);
+                logger.info("Created new cart and added the cartItem into it with cartId :: {}",cartId);
+            }
         }
         response.setStatus(HttpStatus.OK.getReasonPhrase());
         response.setMessage(String.format("Successfully added the item into cart with cartId :: %s",cartId));
+        response.setCartId(cartId);
         return response;
     }
 
@@ -146,7 +180,7 @@ public class ShoppingCartService {
     private CartDAO generateCartDataToSaveDB(AddToCartReq requestDTO) {
         CartDAO cartDBdata = new CartDAO();
         if(!StringUtils.isEmpty(requestDTO.getCartId()))
-            cartDBdata.setUserId(requestDTO.getCartId());
+            cartDBdata.setCartId(requestDTO.getCartId());
         if(!StringUtils.isEmpty(requestDTO.getUserId()))
             cartDBdata.setUserId(requestDTO.getUserId());
 
