@@ -1,0 +1,4 @@
+apiVersion: v2
+name: shopping-cart-ms
+description: Helm chart for shopping-cart-ms
+version: 1.0.0-SNAPSHOT
