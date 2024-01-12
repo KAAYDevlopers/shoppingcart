@@ -24,7 +24,7 @@ public class ShoppingCartController {
             return new ResponseEntity<>(cartService.addToCart(requestDTO), HttpStatus.OK);
         }catch (Exception e){
             logger.error("Exception while add item into cart: {}", e.getMessage());
-            return new ResponseEntity<>("Exception while Inserting/updating items into cart",HttpStatus.INTERNAL_SERVER_ERROR);
+            throw e;
         }
     }
 
@@ -36,7 +36,7 @@ public class ShoppingCartController {
             return new ResponseEntity<>(cartService.getCartDetailsByUserId(userId),HttpStatus.OK);
         }catch (Exception e){
             logger.error("Exception while fetching cart data  by userId : {} => {}",userId,e.getMessage(),e.getCause());
-            return new ResponseEntity<>("Exception while fetching cart data by userId ",HttpStatus.INTERNAL_SERVER_ERROR);
+            throw e;
         }
     }
 
@@ -48,7 +48,7 @@ public class ShoppingCartController {
             return new ResponseEntity<>(cartService.clearCartData(cartId),HttpStatus.OK);
         }catch (Exception e){
             logger.error("Exception while deleting cart data  by cartId : {} => {}",cartId,e.getMessage());
-            return new ResponseEntity<>("Exception while deleting cart data by cartId ",HttpStatus.INTERNAL_SERVER_ERROR);
+            throw e;
         }
     }
 
@@ -60,7 +60,7 @@ public class ShoppingCartController {
             return new ResponseEntity<>(cartService.removeCartItem(cartItemId),HttpStatus.OK);
         }catch (Exception e){
             logger.error("Exception while deleting cartItem by cartItemId : {} => {}",cartItemId,e.getMessage());
-            return new ResponseEntity<>("Exception while deleting cartItem  by cartItemId ",HttpStatus.INTERNAL_SERVER_ERROR);
+            throw e;
         }
     }
 
