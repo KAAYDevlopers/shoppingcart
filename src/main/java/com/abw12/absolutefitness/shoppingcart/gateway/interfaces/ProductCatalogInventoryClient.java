@@ -11,5 +11,5 @@ import java.util.Map;
 public interface ProductCatalogInventoryClient {
 
     @GetMapping("/checkStockStatus")
-    ResponseEntity<Map<String, Object>> cartValidation(@RequestParam Map<String,String> request);
+    ResponseEntity<Map<String, Object>> cartValidation(@RequestParam Map<String,Object> request);
 }

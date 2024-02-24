@@ -6,10 +6,15 @@ data:
   application-dev.yaml: |
     spring:
       datasource:
-        url: jdbc:postgresql://postgres-service:5432/absolutehealth
-        username: postgres
-        password: password
+        url: jdbc:postgresql://{{ .Values.postgres.host }}:{{ .Values.postgres.port }}/{{ .Values.postgres.db }}
+        username: {{ .Values.postgres.username }}
+        password: {{ .Values.postgres.password }}
         driver-class-name: org.postgresql.Driver
+        hikari:
+          maximum-pool-size: 10
+          minimum-idle: 5
+          idle-timeout: 300000
+          max-lifetime: 1800000
       jpa:
         show-sql: true
         properties:
@@ -28,3 +33,4 @@ data:
     springdoc:
       api-docs:
         path: /v3/shoppingcart-docs
+    

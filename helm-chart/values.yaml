@@ -1,0 +1,21 @@
+app:
+  replicas: 1
+  name: shopping-cart-ms
+  configPath: /app/config
+  port: 8083
+
+
+configMap:
+  name: shopping-cart-config
+
+image:
+  repository: abw12/shopping-cart-ms # image name
+  tag: v4
+
+
+postgres:
+  username: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+  host: db-postgresql-blr1-67863-do-user-15872635-0.c.db.ondigitalocean.com
+  port: 25061
+  db: absolutehealth

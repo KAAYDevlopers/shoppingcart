@@ -1,5 +1,6 @@
 package com.abw12.absolutefitness.shoppingcart.service;
 
+import com.abw12.absolutefitness.shoppingcart.advice.InvalidDataRequestException;
 import com.abw12.absolutefitness.shoppingcart.constants.CommonConstants;
 import com.abw12.absolutefitness.shoppingcart.dto.CartDTO;
 import com.abw12.absolutefitness.shoppingcart.dto.CartItemDTO;
@@ -14,7 +15,6 @@ import com.abw12.absolutefitness.shoppingcart.mappers.CartMapper;
 import com.abw12.absolutefitness.shoppingcart.repository.CartItemRepository;
 import com.abw12.absolutefitness.shoppingcart.repository.CartRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -52,7 +53,7 @@ public class ShoppingCartService {
      */
     @Transactional
     public AddToCartRes addToCart(AddToCartReq requestDTO) {
-        //todo decide on how to hanlde userId for guest and logged-in users
+        //todo decide on how to handle userId for guest and logged-in users
         logger.info("Inside addToCart method :: inserting cart data");
         if(requestDTO == null) throw new RuntimeException("Invalid data provided");
         AddToCartRes response = new AddToCartRes();
@@ -61,8 +62,9 @@ public class ShoppingCartService {
         String variantId = requestDTO.getVariantId();
         InventoryValidationRes inventoryValidationRes;
         logger.info("validate inventory for variant with variantId:: {}",variantId);
-        Map<String, String> reqParam = Map.of("variantId", variantId,
-                "quantityRequested", String.valueOf(requestDTO.getRequestQuantity()));
+        Map<String, Object> reqParam = Map.of("variantId", variantId,
+                "quantityRequested", requestDTO.getRequestQuantity());
+        logger.info("Request Params : {}",reqParam);
         ResponseEntity<Map<String, Object>> validationRes = inventoryClient.cartValidation(reqParam);
 
         if(validationRes.getStatusCode().is2xxSuccessful() && validationRes.hasBody()){
@@ -84,7 +86,7 @@ public class ShoppingCartService {
         if(!StringUtils.isEmpty(requestDTO.getCartId())) {
             logger.info("Fetching the existing cart details from DB with cartId :: {}",requestDTO.getCartId());
             CartDAO existingCartData = cartRepository.findById(requestDTO.getCartId()) //based on cartId present in input req
-                    .orElseThrow(() -> new RuntimeException(String.format("Error while fetching the Cart with cartId :: %s",requestDTO.getCartId())));
+                    .orElseThrow(() -> new InvalidDataRequestException(String.format("Error while fetching the Cart with cartId :: %s",requestDTO.getCartId())));
             cartId=existingCartData.getCartId();
             CartItemDAO cartItemToStore = generateCartItemDataToSaveDB(existingCartData,requestDTO);
             //store the cartItem into existing cart
@@ -140,11 +142,12 @@ public class ShoppingCartService {
     }
 
 
+    @Transactional(readOnly = true)
     public CartDTO getCartDetailsByUserId(String userId){
         logger.info("Inside getCartDetailsByUserId to fetch cart details");
         logger.debug("Fetching car details by userId :: {}",userId);
         CartDAO cartData = cartRepository.getCartDetails(userId).orElseThrow(() ->
-                new RuntimeException(String.format("Cannot find cart details by userId : %s", userId)));
+                new InvalidDataRequestException(String.format("Cannot find cart details by userId : %s", userId)));
         List<CartItemDAO> cartItemsList = cartItemRepository.getCartItemDetails(cartData.getCartId()).orElseThrow(() ->
                 new RuntimeException(String.format("Cannot find cart items details for cartId : %s", cartData.getCartId())));
         CartDTO response = cartMapper.entityToDto(cartData);
@@ -170,6 +173,7 @@ public class ShoppingCartService {
         return String.format("Successfully deleted the cart data with cartId %s",cartId);
     }
 
+    @Transactional
     public String removeCartItem(String cartItemId){
         logger.info("Removing the cartItem  with cartItemId :: {}",cartItemId);
         cartItemRepository.deleteById(cartItemId);
