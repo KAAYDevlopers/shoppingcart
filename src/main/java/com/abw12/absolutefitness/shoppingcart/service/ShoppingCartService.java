@@ -62,8 +62,8 @@ public class ShoppingCartService {
         String variantId = requestDTO.getVariantId();
         InventoryValidationRes inventoryValidationRes;
         logger.info("validate inventory for variant with variantId:: {}",variantId);
-        Map<String, String> reqParam = Map.of("variantId", variantId,
-                "quantityRequested", String.valueOf(requestDTO.getRequestQuantity()));
+        Map<String, Object> reqParam = Map.of("variantId", variantId,
+                "quantityRequested", requestDTO.getRequestQuantity());
         logger.info("Request Params : {}",reqParam);
         ResponseEntity<Map<String, Object>> validationRes = inventoryClient.cartValidation(reqParam);
 

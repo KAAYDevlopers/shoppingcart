@@ -16,6 +16,6 @@ image:
 postgres:
   username: ${DB_USERNAME}
   password: ${DB_PASSWORD}
-  host: db-postgresql-blr1-43787-do-user-15428494-0.c.db.ondigitalocean.com
-  port: 25060
+  host: db-postgresql-blr1-67863-do-user-15872635-0.c.db.ondigitalocean.com
+  port: 25061
   db: absolutehealth
