@@ -64,7 +64,7 @@ public class ShoppingCartService {
         logger.info("validate inventory for variant with variantId:: {}",variantId);
         Map<String, Object> reqParam = Map.of("variantId", variantId,
                 "quantityRequested", requestDTO.getRequestQuantity());
-        logger.info("Request Params : {}",reqParam);
+        logger.info("Request Params for car validation API call : {}",reqParam);
         ResponseEntity<Map<String, Object>> validationRes = inventoryClient.cartValidation(reqParam);
 
         if(validationRes.getStatusCode().is2xxSuccessful() && validationRes.hasBody()){
@@ -79,6 +79,7 @@ public class ShoppingCartService {
                 return errorRes;
             }
         }else{
+            logger.error("Failed to do the cart validation of variant using variantId={} :: StatusCode={}",variantId,validationRes.getStatusCode());
             throw new RuntimeException(String.format("Error while calling the product inventory checkStockStatus API :: %s",validationRes.getStatusCode()));
         }
         String cartId = null;
